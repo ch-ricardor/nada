@@ -1,4 +1,5 @@
-<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * CodeIgniter
  *
@@ -28,18 +29,18 @@
  * @link		http://www.williamsconcepts.com/ci/libraries/template/index.html
  * @copyright  Copyright (c) 2008, Colin Williams.
  * @version 1.4.1
- * 
+ *
  */
 class Template {
-   
+
    var $CI;
    var $config;
    var $template;
    var $master;
    var $regions = array(
-      '_scripts' => array(),
-      '_styles' => array(),
-	  '_meta' => array(),
+	'_scripts' => array(),
+	'_styles' => array(),
+	'_meta' => array(),
    );
    var $output;
    var $js = array();
@@ -52,47 +53,49 @@ class Template {
    var $parser_method = 'parse';
    var $parse_template = FALSE;
    var $base_url = '';
-   
+
    var $version='v41';
 
-   //variables to be passed to the template	
+   //variables to be passed to the template
    var $globals=array();
- 
+
    /**
 	 * Constructor
 	 *
-	 * Loads template configuration, template regions, and validates existence of 
+	 * Loads template configuration, template regions, and validates existence of
 	 * default template
 	 *
 	 * @access	public
 	 */
-   
+
    function __construct()
    {
       // Copy an instance of CI so we can use the entire framework.
       $this->CI =& get_instance();
-		      
+
       // Load the template config file and setup our master template and regions
-      include(APPPATH.'config/template'.EXT);
+	// @modified RRE Change path directory to third_party
+      // include(APPPATH.'config/template'.EXT);
+      include(APPPATH.'third_party/template/config/template'.EXT);
       if (isset($template))
-      {		
+      {
          $this->config = $template;
          $this->set_template($template['active_template']);
       }
-	  
+
 	  //set base url for css/js files
 	  if (isset($this->config['base_url']))
 	  {
 	 	$this->base_url=$this->config['base_url'];
 	  }
-	 else 
+	 else
 	 {
 	 	$this->base_url=base_url();
 	 }
-	 
+
 	 //set cs/js version
-	 $this->version=date("mY");	
-	 
+	 $this->version=date("mY");
+
 	 if ($this->CI->config->item('js_css_version') )
 	 {
 	 	$this->version=$this->CI->config->item('js_css_version');
@@ -101,18 +104,18 @@ class Template {
 	 {
 	 	//add key if not exist
 		$this->CI->load->model('Configurations_model');
-	 	$this->CI->Configurations_model->add($name='js_css_version', $value=date("U"),$label='JS/CSS version');		
+	 	$this->CI->Configurations_model->add($name='js_css_version', $value=date("U"),$label='JS/CSS version');
 	 }
  }
-   
+
    //returns the js/css version number
    function get_js_css_version()
    {
    		return $this->version;
    }
-   
+
    // --------------------------------------------------------------------
-   
+
    /**
     * Use given template settings
     *
@@ -120,7 +123,7 @@ class Template {
     * @param   string   array key to access template settings
     * @return  void
     */
-   
+
    function set_template($group)
    {
       if (isset($this->config[$group]))
@@ -591,24 +594,24 @@ class Template {
 
 
    // --------------------------------------------------------------------
-   
+
    /**
     * Dynamically include meta in the template
-    * 
+    *
     *
     * @access  public
     * @param   string   meta name attribute
     * @param   string  meta content attribute value
     * @return  TRUE on success, FALSE otherwise
     */
-   
+
    function add_meta($name, $content,$type='pair')
    {
       $success = TRUE;
       $meta = NULL;
-      
+
       $this->CI->load->helper('url');
-      
+
       switch ($type)
       {
          case 'pair':
@@ -795,18 +798,18 @@ class Template {
          // This just turns the wrapper into a closing tag. Like '<p>' to '</p>'
          $output .= str_replace('<', '</', $region['wrapper']) . "\n";
       }
-      
+
       return $output;
    }
-   
+
    //return the theme folder name
    function theme()
    {
 	   return $this->template['theme_folder'];
    }
-   
+
 }
 // END Template Class
 
 /* End of file Template.php */
-/* Location: ./system/application/libraries/Template.php */
+/* Location: ./application/third_party/template/libraries/Template.php */

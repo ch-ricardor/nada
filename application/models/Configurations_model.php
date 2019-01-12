@@ -1,84 +1,125 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * NADA
+ *
+ * Microdata Cataloging Tool
+ *
+ * @category
+ * @package
+ * @subpackage
+ * @author		Mehmood Asghar
+ * @copyright           IHSN
+ * @license             http://
+ * @link                http://www.surveynetwork.org
+ * @since               Version 1.0
+ * @version             Version 5
+ * @modified 		RRE
+ */
+
+// ------------------------------------------------------------------------
+
 class Configurations_model extends CI_Model {
- 
-    public function __construct()
-    {
-        parent::__construct();
+
+	public function __construct()
+	{
+		parent::__construct();
 		//$this->output->enable_profiler(TRUE);
-    }
-	
+	}
+
 	/**
 	* load nada configurations
 	*
 	*/
-    function load()
-    {
+	function load()
+	{
+
+		/**
+         	 * @todo RRE - Validation to be able to install the app
+        	*/
+		if (! $this->db->table_exists('configurations'))
+		{
+			log_message('error', 'configurations table does not exists. configurations_model.php');
+			return FALSE;
+		}
+
 		$this->db->select('name,value');
 		$result= $this->db->get('configurations');
 
 		if ($result)
 		{
 			return $result->result_array();
-		}		
+		}
 
-		return FALSE;	
-    }
-  	
+		return FALSE;
+	}
+
 	/**
 	* returns all settings
 	*
 	*/
 	function select_all()
-    {
-		$this->db->select('*');		
+	{
+		$this->db->select('*');
 		$this->db->from('configurations');
-        return $this->db->get()->result_array();
-    }
-	
-	
+		return $this->db->get()->result_array();
+	}
+
+
 	/**
 	* check if a config key exists
 	*
 	*/
 	function check_key_exists($key)
-    {
+	{
+
+		/**
+		* @todo RRE - Validation to be able to install the app
+		*/
+		if (! $this->db->table_exists('configurations'))
+		{
+			log_message('error', 'configurations table does not exists. configurations_model.php');
+			return FALSE;
+		}
+
 		$this->db->select('count(*) as found');
 		$this->db->where('name',$key);
-        $result=$this->db->get('configurations');
-		
+		$result=$this->db->get('configurations');
+
 		if (!$result)
 		{
 			return FALSE;
 		}
-		
+
 		$result=$result->row_array();
-		
+
 		if ($result && $result['found']>0)
 		{
 			return TRUE;
 		}
-		
+
 		return FALSE;
-    }	
+	}
 
 	/**
 	* returns an array of site configurations
 	*
-	*/	
+	*/
 	function get_config_array()
-    {
-		$this->db->select('name,value');		
+	{
+		$this->db->select('name,value');
 		$this->db->from('configurations');
-        $rows=$this->db->get()->result_array();
-		
+		$rows=$this->db->get()->result_array();
+
 		$result=array();
 		foreach($rows as $row)
 		{
 			$result[$row['name']]=$row['value'];
 		}
-		
+
 		return $result;
-    }	
+	}
 
 
 	/**
@@ -86,31 +127,43 @@ class Configurations_model extends CI_Model {
 	*
 	*/
 	function update($options)
-	{		
+	{
 		foreach($options as $key=>$value)
 		{
 			$data=array('value'=>$value);
 			$this->db->where('name', $key);
 			$result=$this->db->update('configurations', $data);
-			
+
 			if(!$result)
 			{
 				return FALSE;
 			}
-		}		
+		}
 		return TRUE;
 	}
-	
+
 	/**
 	* add new configuration
 	*
 	*/
 	function add($name, $value,$label=NULL, $helptext=NULL)
-	{	
+	{
+
+		/**
+		* @modified RRE
+                 @todo RRE - Validation to be able to install the app
+                */
+		if (! $this->db->table_exists('configurations'))
+		{
+			log_message('error', 'configurations table does not exists. configurations_model.php');
+			return FALSE;
+		}
+
+
 		if (trim($name)=='')
 		{
 			return FALSE;
-		}	
+		}
 
 		//check key already exists
 		if ($this->check_key_exists($name))
@@ -120,30 +173,30 @@ class Configurations_model extends CI_Model {
 
 		$data=array('name'=>$name,'value'=>$value,'label'=>$label,'helptext'=>$helptext);
 		$result=$this->db->insert('configurations', $data);
-		
+
 		if(!$result)
 		{
 			return FALSE;
 		}
-		
+
 		return TRUE;
 	}
-	
+
 	/**
 	*
 	* Return an array of vocabularies
 	*
 	*/
 	function get_vocabularies_array()
-    {
-		$this->db->select('vid,title');		
+	{
+		$this->db->select('vid,title');
 		$this->db->from('vocabularies');
-        $query=$this->db->get();
-		
+		$query=$this->db->get();
+
 		if($query)
 		{
 			$rows=$query->result_array();
-			
+
 			$result=array('-'=>'---');
 			foreach($rows as $row)
 			{
@@ -151,10 +204,8 @@ class Configurations_model extends CI_Model {
 			}
 			return $result;
 		}
-		
+
 		return FALSE;
-    }	
-	
-	
+    }
+
 }
-?>

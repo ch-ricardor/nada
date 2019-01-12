@@ -683,4 +683,4 @@ $config['modules_locations'] = array(
 );
 
 /* End of file config.php */
-/* Location: ./system/application/config/config.php */
+/* Location: ./application/config/config.php */

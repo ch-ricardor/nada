@@ -1,9 +1,30 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * NADA
+ *
+ * Microdata Cataloging Tool
+ *
+ * @category
+ * @package
+ * @subpackage
+ * @author
+ * @copyright           IHSN
+ * @license             http://
+ * @link                http://www.surveynetwork.org
+ * @since               Version 1.0
+ * @version             Version 4.3
+ * @author              Mehmood Asghar
+ * @modified            RRE
+ */
+
+// ------------------------------------------------------------------------
 
 class Install extends CI_Controller {
 
 	function __construct()
-	{		
+	{
 		parent::__construct();
 
 		//get a list of languages
@@ -12,14 +33,15 @@ class Install extends CI_Controller {
 		$language=isset($_COOKIE["nada_language"]) ? $_COOKIE["nada_language"] : 'english';
 		$this->config->set_item('language',$language);
 
-		$this->load->database();
-		
+		// @modified RRE - Needs to be deactivated to test config/database.php
+		// $this->load->database();
+
 		//initialize
 		$this->load->dbforge();
-		
-		//database utilities	
+
+		//database utilities
 		$this->load->dbutil();
-		
+
 		$this->template->set_template('installer');
 
 		$this->lang->load("general");
@@ -32,16 +54,16 @@ class Install extends CI_Controller {
 	{
 		$languages=scandir(APPPATH.'language/');
 		$language_arr=array();
-		
+
 		foreach($languages as $lang)
 		{
 			if ($lang!=='.' && $lang!=='..')
 			{
 				$language_arr[]=$lang;
-			}	
+			}
 		}
-		
-		$this->languages=$language_arr;	
+
+		$this->languages=$language_arr;
 	}
 
 	function language($name=NULL)
@@ -55,46 +77,50 @@ class Install extends CI_Controller {
 		{
 			setcookie('nada_language','english',0,'/');
 		}
-		
+
 		redirect("install");
 	}
-	
+
 	function index()
-	{	
+	{
 		//test if database is already installed
-		$this->is_already_installed();
-		
+		// $this->is_already_installed();
+		if ( $this->is_already_installed())
+		{
+			show_error('System already Installed');
+		}
+
 		//test database connectivity
-		$data['db_connect']=$this->_test_connection();		
+		$data['db_connect']=$this->_test_connection();
 
 		//database connection successful
 		if ($data['db_connect']!==FALSE)
 		{
 			//database version
-			$data['db_version']=$this->db->version();		
+			$data['db_version']=$this->db->version();
 		}
 
 		//php version
 		$data['php_version']=phpversion();
-		
+
 		//test the required extensions
 		$data['extensions']=$this->load->view("install/extensions",NULL,TRUE);
-		
+
 		//check required extensions
 		$data['other_settings']=$this->load->view("install/other_settings",NULL,TRUE);
-	
+
 		//test folder rights
 		$data['permissions']=$this->load->view("install/file_rw",NULL,TRUE);
-						
+
 		$content=$this->load->view('install/index',$data,TRUE);
-				
-		//render final output		
+
+		//render final output
 		$this->template->write('title', t('title_data_catalog'),true);
 		$this->template->write('content', $content,true);
 	  	$this->template->render();
 	}
 
-	
+
 	function installing($step=NULL)
 	{				
 		if ($step==NULL)
@@ -311,29 +337,58 @@ class Install extends CI_Controller {
 	
 	
 	/**
-	 * 
+	 *
 	 * Check if the Application is already installed
 	 * If application is installed, the installer will not continue
-	 * 
+	 *
 	 * @return bool
 	 */
-	function is_already_installed()
+	function is_already_installed($test_db = 'default')
 	{
-		//check if database connection settings are filled in
-		if ($this->db->dbdriver=='' || $this->db->username=='' || $this->db->database=='')
+
+		// @modified RRE - Using same code from MY_Controller.php
+
+		// @todo Check if DB is created or modify DB error handling
+		//   in this case using the default db definition
+		//   NOTE: $test_db parameter in case of using multiple databases
+		$test_db_config = APPPATH.'config/database.php';
+		if (!file_exists($test_db_config))
 		{
-			show_error('You have not setup database settings');
+			show_error('You have not setup a database config file');
+			return FALSE;
 		}
-		
+
+		// reading db configurations
+		require $test_db_config;
+
+		//check if database connection settings are filled in
+		if ($db[$test_db]['dbdriver'] == '' || $db[$test_db]['username'] == '' || $db[$test_db]['database'] == '')
+		{
+			show_error('You have not setup a database');
+			return FALSE;
+		}
+
+//                $this->load->database();
+
+                // @modified RRE
+                // @todo Change config/autoload.php
+                //      - check libraries disabled like template which inhabilitate this function
+                //
+                // @todo RRE Table validation, return false, then validate the call for TRUE - FALSE
+                if ( ! $this->db->table_exists('configurations'))
+                {
+			return FALSE;
+                }
+
 		//test reading from database tables
-		$this->db->select("name");	
+		$this->db->select("name");
 		$this->db->where("name", "app_installed");
 		$query=$this->db->get("configurations");
-		
+
 		if ($query)
 		{
 			$result=$query->row_array();
-			
+
 			if (isset($result['name']))
 			{
 				//Application is already installed, exit the installer
@@ -341,7 +396,37 @@ class Install extends CI_Controller {
 				exit;
 			}
 		}
-				
+                return TRUE;
+
+
+/*
+
+* @todo Verify if this code can be removed
+
+		//check if database connection settings are filled in
+		if ($this->db->dbdriver=='' || $this->db->username=='' || $this->db->database=='')
+		{
+			show_error('You have not setup database settings');
+		}
+
+
+		//test reading from database tables
+		$this->db->select("name");
+		$this->db->where("name", "app_installed");
+		$query=$this->db->get("configurations");
+
+		if ($query)
+		{
+			$result=$query->row_array();
+
+			if (isset($result['name']))
+			{
+				//Application is already installed, exit the installer
+				show_error(t('page_not_found').' - <a href="'.site_url().'">'.t('return_to_site').'</a>');
+				exit;
+			}
+		}
+
 		//test database connection only if everything else above has failed
 		switch($this->db->dbdriver)
 		{
@@ -350,7 +435,7 @@ class Install extends CI_Controller {
 				break;
 			case 'mysqli':
 				$conn_id = @mysqli_connect($this->db->hostname, $this->db->username, $this->db->password);
-				break;	
+				break;
 			case 'postgre':
 				$conn_id=@pg_connect("host={$this->db->hostname} user={$this->db->username} password={$this->db->password} connect_timeout=5 dbname=postgres");
 				break;
@@ -362,15 +447,16 @@ class Install extends CI_Controller {
 				show_error('INSTALLER::database not supported');
 		}
 
-		if (!$conn_id ) 
-        {
-            //cannot connect to database server
+		if (!$conn_id )
+		{
+			//cannot connect to database server
 			show_error('Failed to connect to database, check database settings');
-        } 
+		}
+*/
+
 	}
-	
-	
-	
+
+
 	/**
 	*
 	* Test database connectivity
@@ -380,7 +466,7 @@ class Install extends CI_Controller {
 	function _test_connection()
 	{
 		$conn_id=FALSE;
-		
+
 		switch($this->db->dbdriver)
 		{
 			case 'mysql':
@@ -402,19 +488,19 @@ class Install extends CI_Controller {
 
 		//return false;
 		//$conn_id = @mysql_connect($this->db->hostname, $this->db->username, $this->db->password, TRUE);
-        
-        if (! $conn_id ) 
-        {
-            return FALSE;
-        } 
-        else 
-        {
+
+		if (! $conn_id )
+		{
+			return FALSE;
+		}
+		else
+		{
 			//mysql_close($conn_id);
-            return TRUE;
-        }
+			return TRUE;
+		}
 	}
-	
-	
+
+
 	//create database if not already exists
 	function _create_database()
 	{

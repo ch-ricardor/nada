@@ -37,7 +37,10 @@
 |
 */
 
-$autoload['packages'] = array(APPPATH.'third_party');
+$autoload['packages'] = array(
+			APPPATH.'third_party',
+			APPPATH.'third_party/template'
+			);
 
 /*
 | -------------------------------------------------------------------
@@ -123,4 +126,4 @@ $autoload['model'] = array('Configurations_model','Menu_model','Repository_model
 
 
 /* End of file autoload.php */
-/* Location: ./system/application/config/autoload.php */
+/* Location: ./application/config/autoload.php */

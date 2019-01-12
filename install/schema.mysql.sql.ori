@@ -1655,6 +1655,8 @@ CREATE TABLE `api_logs` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 
+
+
 DROP TABLE IF EXISTS `data_files_resources`;
 CREATE TABLE `data_files_resources` (
   `id` INT NOT NULL AUTO_INCREMENT,
@@ -1679,25 +1681,14 @@ CREATE TABLE `survey_locations` (
 
 
 --
--- Table structure for table tokens
---
-
-DROP TABLE IF EXISTS `tokens`;
-CREATE TABLE `tokens` (
-  `tokenid` varchar(100) NOT NULL,
-  `dated` int NOT NULL,
-  PRIMARY KEY (`tokenid`)
-)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
 -- Set foreign keys
 --
 
 
 /* 
    Enable/dislabe foreign key checks
-   SET FOREIGN_KEY_CHECKS = 0
 */
+   SET FOREIGN_KEY_CHECKS = 0;
 
 
 ALTER TABLE da_collection_surveys
@@ -1706,6 +1697,15 @@ ALTER TABLE da_collection_surveys
    REFERENCES `surveys` (`id`)
    ON DELETE CASCADE
    ON UPDATE CASCADE;
+
+
+ALTER TABLE data_files
+   ADD CONSTRAINT `cascade_data_files`
+   FOREIGN KEY (`sid`)
+   REFERENCES `surveys` (`id`)
+   ON DELETE CASCADE
+   ON UPDATE CASCADE;
+
 
 ALTER TABLE data_files_resources
    ADD CONSTRAINT `cascade_data_files_resources`

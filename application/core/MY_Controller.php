@@ -1,22 +1,47 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/**
+ * NADA
+ *
+ * Microdata Cataloging Tool
+ *
+ * @category
+ * @package
+ * @subpackage
+ * @author
+ * @copyright           IHSN
+ * @license             http://
+ * @link                http://www.surveynetwork.org
+ * @since               Version 1.0
+ * @version             Version 5
+ * @author              Mehmood Asghar
+ * @modified            RRE
+ */
+
+// ------------------------------------------------------------------------
+
+
+
 class MY_Controller extends CI_Controller
-{	
-    public $_ci_plugins = array();
-    var $_ci_ob_level;
-    public $_ci_view_path      = '';
-    var $_ci_library_paths  = array();
-    var $_ci_model_paths    = array();
-    var $_ci_helper_paths   = array();
-    var $_base_classes      = array(); // Set by the controller class
-    var $_ci_cached_vars    = array();
-    var $_ci_classes        = array();
-    var $_ci_loaded_files   = array();
-    var $_ci_models         = array();
-    var $_ci_helpers        = array();
-    var $_ci_varmap         = array('unit_test' => 'unit', 'user_agent' => 'agent');
-	
+{
+	public $_ci_plugins = array();
+	var $_ci_ob_level;
+	public $_ci_view_path      = '';
+
+	var $_ci_library_paths  = array();
+	var $_ci_model_paths    = array();
+	var $_ci_helper_paths   = array();
+	var $_base_classes      = array(); // Set by the controller class
+	var $_ci_cached_vars    = array();
+	var $_ci_classes        = array();
+	var $_ci_loaded_files   = array();
+	var $_ci_models         = array();
+	var $_ci_helpers        = array();
+	var $_ci_varmap         = array('unit_test' => 'unit', 'user_agent' => 'agent');
+
 	var $is_admin=TRUE;
-	
+
 	/**
 	* Manages both admin/non-admin users
 	*
@@ -24,37 +49,36 @@ class MY_Controller extends CI_Controller
 	* @is_admin		requires the user to have admin rights
 	*/
 	public function __construct($skip=FALSE,$is_admin=TRUE)
-	{		
+	{
 		parent::__construct();
-		
 		//test if application is installed
 		$this->is_app_installed();
-	
+
 		//switch language
 		$this->_switch_language();
 		$this->lang->load("general");
 		$this->load->model('Permissions_model');
-			
-		$this->load->library(array('site_configurations','session','ion_auth','form_validation','acl'));	
+
+		$this->load->library(array('site_configurations','session','ion_auth','form_validation','acl'));
 		$this->is_admin=$is_admin;
-		
-		//require authentication for protected pages e.g. admin	
+
+		//require authentication for protected pages e.g. admin
 		if ($skip===FALSE)
 		{
 		   //apply IP restrictions for site administration
 		   $this->apply_ip_restrictions();
-		   
+
 			//check user is logged in or not
 			$this->_auth();
-			
+
 			//get user object with all user info
 			$user=$this->ion_auth->current_user();
-		
+
 			if (!$user)
 			{
 				return FALSE;
 			}
-			
+
 			//check user has access to the url
 			if (!$this->acl->user_has_url_access() )
 			{
@@ -69,8 +93,8 @@ class MY_Controller extends CI_Controller
 	* Check user has access to the current page
 	**/
 	/*
-	//TODO: Remove later
-	
+	// @todo: Remove later
+
 	function _has_access()
 	{	
 		$excluded_urls=array('auth','catalog');
@@ -100,36 +124,36 @@ class MY_Controller extends CI_Controller
 		$this->acl->check_study_permissions();				
 	}
 	*/
-	
+
 
 
 	/**
-	 * 
+	 *
 	 * Apply IP restrictions for Site Admin
-	 * 
+	 *
 	 */
 	 public function apply_ip_restrictions()
 	 {
-		$user_ip=$this->input->ip_address();  		
+		$user_ip=$this->input->ip_address();
 		$ip_list=$this->config->item("admin_allowed_ip");
-		
+
 		if ($ip_list!==FALSE)
 		{
 		  if (is_array($ip_list) && count($ip_list)>0)
 		  {
-			  //check ip is in the allowed list  
+			  //check ip is in the allowed list
 			  if (!in_array($user_ip, $ip_list))
 			  {
 				 //log
 				 $this->db_logger->write_log('blocked','site access blocked from ip:'.$user_ip,'access-blocked');
-				 
-				 //show page not found  
-				 show_404(); 
-			  }  
-		  }     
-		} 
+
+				 //show page not found
+				 show_404();
+			  }
+		  }
+		}
 	 }
-    
+
 	/**
 	* Switch site language using cookies
 	*
@@ -137,12 +161,12 @@ class MY_Controller extends CI_Controller
 	function _switch_language()
 	{
 		if($this->session->userdata('language'))
-		{	
+		{
 	        //switch language
 			$this->config->set_item('language',$this->session->userdata('language'));
 		}
 	}
-	
+
 	/**
 	*
 	*
@@ -151,7 +175,7 @@ class MY_Controller extends CI_Controller
 	function _auth()
 	{
 		$destination=$this->uri->uri_string();
-		
+
 		//check if ajax is set
 		if ($this->input->get_post("ajax"))
 		{
@@ -162,23 +186,23 @@ class MY_Controller extends CI_Controller
 		{
 			$destination.='/?print='.$this->input->get_post("print");
 		}
-				
+
 		$this->session->set_userdata("destination",$destination);
 
 		//not logged in
-    	if (!$this->ion_auth->logged_in()) 
+    	if (!$this->ion_auth->logged_in())
 		{
 			//check ajax requests
 			if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') 
 			{
 				header('HTTP/1.0 401 Unauthorized');
 				exit;
-			}			
-		
+			}
+
 			//redirect them to the login page
 			redirect("auth/login/?destination=$destination", 'refresh');
     	}
-    	elseif (!$this->ion_auth->is_admin() && $this->is_admin==TRUE ) 
+    	elseif (!$this->ion_auth->is_admin() && $this->is_admin==TRUE )
 		{
 			log_message('error', 'MY_CONTROLLER::_auth::access denied for user: '.$this->ion_auth->current_user_identity());
 			show_error("access_denied");
@@ -188,33 +212,71 @@ class MY_Controller extends CI_Controller
 	//get public site menu
 	function _menu()
 	{
-		$data['menus']= $this->Menu_model->select_all();		
+		$data['menus']= $this->Menu_model->select_all();
 		$content=$this->load->view('default_menu', $data,true);
 		return $content;
 	}
-	
+
  	/**
 	* Test if app is properly installed and can connect to db
 	*/
- 	function is_app_installed()
+ 	function is_app_installed($test_db = 'default')
 	{
+		// @modified RRE - If the database does not exist validation
+		// @todo Check if DB is created or modify DB error handling
+		//   in this case using the default db definition
+		//   NOTE: $test_db parameter in case of using multiple databases
+		$test_db_config = APPPATH.'config/database.php';
+		if (!file_exists($test_db_config))
+		{
+			show_error('You have not setup a database config file');
+			return FALSE;
+		}
+
+		// reading db configurations
+		require $test_db_config;
+
+		//check if database connection settings are filled in
+		if ($db[$test_db]['dbdriver'] == '' || $db[$test_db]['username'] == '' || $db[$test_db]['database']  =='')
+		{
+			show_error('You have not setup a database');
+			return FALSE;
+
+		}
 		$this->load->database();
-		
+
+		// @modified RRE
+		// @todo Change config/autoload.php
+		// 	- check libraries disabled like template which inhabilitate this function
+		//
+                // @todo RRE Table validation, return false, then validate the call for TRUE - FALSE
+		if (! $this->db->table_exists('configurations'))
+		{
+			redirect("install");
+                }
+		return TRUE;
+
+/*
+ * @modified RRE
+ * todo: Validate if this code could be removed
 		//check if database connection settings are filled in
 		if ($this->db->dbdriver=='' || $this->db->username=='' || $this->db->database=='')
 		{
 			show_error('You have not setup a database');
+			return FALSE;
+
 		}
-		
+
 		//test reading from database tables
 		$this->db->limit(1);
 		$query=$this->db->get('configurations');
-		
+
 		if ($query)
 		{
 			return TRUE;
 		}
-				
+		return FALSE;
+
 		//test database connection only if everything else above has failed
 		switch($this->db->dbdriver)
 		{
@@ -223,7 +285,7 @@ class MY_Controller extends CI_Controller
 				break;
 			case 'mysqli':
 				$conn_id = mysqli_connect($this->db->hostname, $this->db->username, $this->db->password);								
-				break;	
+				break;
 			case 'postgre':
 				$conn_id=@pg_connect("host={$this->db->hostname} user={$this->db->username} password={$this->db->password} connect_timeout=5 dbname=postgres");
 				break;
@@ -233,21 +295,24 @@ class MY_Controller extends CI_Controller
 				break;
 			case 'oci8':
 				$conn_id = @oci_connect($this->db->username, $this->db->password, $this->db->hostname);
-				break;				
+				break;
 			default:
 				show_error('MY_CONTROLLER::database not supported '.$this->db->dbdriver);
 		}
 
-		if (!$conn_id ) 
-        {
-            //cannot connect to database server
+		if (!$conn_id )
+		{
+			//cannot connect to database server
 			show_error('Failed to connect to database, check database settings');
-        } 
-        else //can connect to db server but not to the database
-        {
-            redirect("install");
-        }
+		}
+		else //can connect to db server but not to the database
+		{
+			redirect("install");
+		}
+*/
+
+
 	}
 
-	
-}	
+
+}
